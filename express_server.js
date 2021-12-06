@@ -1,3 +1,4 @@
+const { response } = require("express");
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -21,6 +22,20 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
+app.get("/urls/:shortURL", (req, res) => {
+  //console.log(req.params)
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL];
+  const templateVars = { shortURL, longURL };
+  res.render("urls_show", templateVars);
+});
+
+app.get("/root/:airplane/:train/:boat", (req,res) => {
+  console.log(req.params); //req params is the url. one param is one :/
+  //saves as an object {airplane: /url link, train:/url/url, boat...}
+  res.send("hello"); //body is in the last location (3 files in)
+})
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
