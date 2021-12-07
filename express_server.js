@@ -35,8 +35,11 @@ app.get("/urls/new/", (req, res) => {  // the / at the end means something... fo
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  // console.log("this is the pair",req.body);  // Log the POST request body to the console
+  let randomname = generateRandomString();
+  urlDatabase[randomname] = req.body.longURL;
+  // console.log(urlDatabase);
+  res.redirect(`/urls/${randomname}`);         // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -47,6 +50,17 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.post("/urls/:shortURL/delete", (req, res) => {  //delete?
+  const shortURL = req.params.shortURL;
+  delete urlDatabase[shortURL];
+ 
+  res.redirect(`/urls`);         // Respond with 'Ok' (we will replace this)
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
+});
 
 app.get("/root/:airplane/:train/:boat", (req,res) => {
   // console.log(req.params); //req params is the url. one param is one :/
