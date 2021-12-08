@@ -26,6 +26,7 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
+  // console.log("appget",urlDatabase);
   res.render("urls_index", templateVars);
 });
 
@@ -38,17 +39,30 @@ app.post("/urls", (req, res) => {
   // console.log("this is the pair",req.body);  // Log the POST request body to the console
   let randomname = generateRandomString();
   urlDatabase[randomname] = req.body.longURL;
-  // console.log(urlDatabase);
+  // console.log("before",urlDatabase);
   res.redirect(`/urls/${randomname}`);         // Respond with 'Ok' (we will replace this)
+  // console.log("after",urlDatabase);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   //console.log(req.params)
   const shortURL = req.params.shortURL; //keys
   const longURL = urlDatabase[shortURL]; //values
+  // console.log("appget;short",urlDatabase);
   const templateVars = { shortURL, longURL };
+
+  urlDatabase[req.params.shortURL] = longURL;
+  console.log("sadsa",{urlDatabase});
   res.render("urls_show", templateVars);
 });
+
+app.post("/urls/:shortURL", (req, res) => { ///after edit
+  
+  urlDatabase[req.params.shortURL] = req.body.newURL;
+
+  res.redirect(`/urls/`);
+});
+
 
 app.post("/urls/:shortURL/delete", (req, res) => {  //delete?
   const shortURL = req.params.shortURL;
