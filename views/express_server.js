@@ -1,13 +1,19 @@
 const { response } = require("express");
 const express = require("express");
-const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser());
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ["user_id"],
+
+}))
+
 app.set("view engine", "ejs");
 
 const generateRandomString = () => {
@@ -42,7 +48,7 @@ const getLoggedInUser = (req) => {
 
   // console.log("req.cookies",req.cookies);
 
-  const user_id = req.cookies.user_id;
+  const user_id = req.session.user_id;
   
   if (users[user_id]) {
     return users[user_id];
@@ -96,23 +102,27 @@ app.get("/login", (req, res) => {  //log int part 3
 app.post("/login", (req, res) => { ///header
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   
   if (email === "" || password === "") {
     res.status(400).send("no inputs");
   }
+  
   const userID = findUserByEmail(email);
-
+  
   if (!userID) {
     res.status(403).send("No such user");
   }
-
-  if (users[userID].password !== password) {
-  
+  // bcrypt.compareSync(users[userID].password hashedPassword);
+  if (bcrypt.compareSync(users[userID].password, hashedPassword)) {
+    
     res.status(403).send("Bad password");
   }
 
-  if (userID && users[userID].password === password) {
-    res.cookie("user_id", findUserByEmail(email));
+  if (userID && bcrypt.compareSync(users[userID].password, hashedPassword)) {
+    
+    req.session.user_id = findUserByEmail(email);
+
   }
 
   res.redirect("/urls");
@@ -120,7 +130,7 @@ app.post("/login", (req, res) => { ///header
 
 app.post("/logout", (req, res) => { ///header
 
-  res.clearCookie("user_id");
+  req.session = null;
 
   res.redirect("/urls");
 });
@@ -128,10 +138,10 @@ app.post("/logout", (req, res) => { ///header
 app.get("/urls", (req, res) => {   ////?? only giving current user id
 
   const templateVars = {
-    reduced: reduceUrlDatabase(req.cookies.user_id),
+    reduced: reduceUrlDatabase(req.session.user_id),
     urls: urlDatabase,
     users: users,
-    myAccount: req.cookies.user_id,
+    myAccount: req.session.user_id,
     user: getLoggedInUser(req)
   };
   // console.log(urlDatabase);
@@ -140,7 +150,7 @@ app.get("/urls", (req, res) => {   ////?? only giving current user id
 
 app.get("/urls/new", (req, res) => {  // the / at the end means something... forgot what
 
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     
     res.redirect("/login");
   } else {
@@ -159,7 +169,7 @@ app.post("/urls", (req, res) => {
   let randomname = generateRandomString();
   urlDatabase[randomname] = {
     longURL:  req.body.longURL,
-    userID: req.cookies.user_id
+    userID: req.session.user_id
   };
   res.redirect(`/urls/${randomname}`);         // Respond with 'Ok' (we will replace this)
 
@@ -176,7 +186,7 @@ app.get("/urls/:shortURL", (req, res) => {
     user: getLoggedInUser(req)
   };
 
-  if (urlDatabase[shortURL].userID !== req.cookies.user_id) {
+  if (urlDatabase[shortURL].userID !== req.session.user_id) {
     res.status(400).send("Not authorized");
   }
   
@@ -222,6 +232,7 @@ app.post("/register", (req, res) => { //password post
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (email === "" || password === "") {
     res.status(400).send("no inputs");
@@ -229,11 +240,12 @@ app.post("/register", (req, res) => { //password post
     res.status(400).send("already exists");
   } else if (!getLoggedInUser(req)) {
     users[id] = {
-      id, email, password
+      id, email, hashedPassword
     };
     // console.log(users);
     // console.log(existingUser);
-    res.cookie("user_id", id);   ///log in? req.cookies?
+    //req.session.user_id = id;
+    req.session.user_id = id;   ///log in? req.cookies?
     res.redirect("/urls");
   }
 
