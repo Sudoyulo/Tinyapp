@@ -11,8 +11,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
   keys: ["user_id"],
-
-}))
+}));
 
 app.set("view engine", "ejs");
 
@@ -114,12 +113,13 @@ app.post("/login", (req, res) => { ///header
     res.status(403).send("No such user");
   }
   // bcrypt.compareSync(users[userID].password hashedPassword);
+
   if (bcrypt.compareSync(users[userID].password, hashedPassword)) {
     
     res.status(403).send("Bad password");
   }
 
-  if (userID && bcrypt.compareSync(users[userID].password, hashedPassword)) {
+  if (userID && bcrypt.compareSync(users[userID].password, hashedPassword)) { //wont login
     
     req.session.user_id = findUserByEmail(email);
 
@@ -240,7 +240,7 @@ app.post("/register", (req, res) => { //password post
     res.status(400).send("already exists");
   } else if (!getLoggedInUser(req)) {
     users[id] = {
-      id, email, hashedPassword
+      id, email, password: hashedPassword
     };
     // console.log(users);
     // console.log(existingUser);
