@@ -43,6 +43,15 @@ const getLoggedInUser = (req) => {
   return null;
 };
 
+const findUserByEmail = (email) => {
+  for (const user in users) {
+    if (users[user].email === email) {
+      return users[user].id;
+    }
+  }
+return false;
+}
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -51,9 +60,39 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.post("/login", (req, res) => { ///header
+app.get("/login", (req, res) => {  //log int part 3
+  
+  const templateVars = {
+    urls: urlDatabase,
+    users: users,
+    user: getLoggedInUser(req)
+  };
 
-  res.cookie("user_id", req.body.username);
+  res.render("urls_login", templateVars);
+});
+
+
+app.post("/login", (req, res) => { ///header
+  const email = req.body.email;
+  const password = req.body.password;
+  
+  if (email === "" || password === "") {
+    res.status(400).send("no inputs");
+  }
+  const userID = findUserByEmail(email);
+
+  if (!userID) {
+    res.status(403).send("No such user");
+  }
+
+  if (users[userID].password !== password) {
+  
+    res.status(403).send("Bad password");
+  }
+
+  if (userID && users[userID].password === password) {
+    res.cookie("user_id", findUserByEmail(email));
+  }
 
   res.redirect("/urls");
 });
@@ -150,14 +189,14 @@ app.get("/register", (req, res) => { //password get
 app.post("/register", (req, res) => { //password post
 
   const id = generateRandomString();
-  const username = req.body.email;
+  const email = req.body.email;
   const password = req.body.password;
 
-  if (username === "" || password === "") {
+  if (email === "" || password === "") {
     res.status(400).send("no inputs");
   } else if (!getLoggedInUser(req)) {
     users[id] = {
-      id, username, password
+      id, email, password
     };
     console.log(users);
     // console.log(existingUser);
