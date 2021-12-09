@@ -153,20 +153,18 @@ app.post("/register", (req, res) => { //password post
   const username = req.body.email;
   const password = req.body.password;
 
-  if (!getLoggedInUser(req)) {
+  if (username === "" || password === "") {
+    res.status(400).send("no inputs");
+  } else if (!getLoggedInUser(req)) {
     users[id] = {
       id, username, password
     };
-    // console.log(users);
+    console.log(users);
     // console.log(existingUser);
     res.cookie("user_id", id);   ///log in? req.cookies?
-    
     res.redirect("/urls");
-
-
   } else {
-    res.write("alreay exists");
-
+    res.status(400).send("already exists");
   }
 
 });
