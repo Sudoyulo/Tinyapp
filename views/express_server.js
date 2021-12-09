@@ -137,20 +137,19 @@ app.get("/urls", (req, res) => {   ////?? only giving current user id
   res.render("urls_index", templateVars);
 });
 
-app.get("/urls/new/", (req, res) => {  // the / at the end means something... forgot what
+app.get("/urls/new", (req, res) => {  // the / at the end means something... forgot what
 
   if (!req.cookies.user_id) {
     
-    res.redirect("/urls");
+    res.redirect("/login");
+  } else {
+    const templateVars = {
+      urls: urlDatabase,
+      users: users,
+      user: getLoggedInUser(req)
+    };
+    res.render("urls_new", templateVars);
   }
- 
-  const templateVars = {
-    urls: urlDatabase,
-    users: users,
-    user: getLoggedInUser(req)
-  };
-
-  res.render("urls_new", templateVars);
 });
 
 app.post("/urls", (req, res) => {
