@@ -73,7 +73,6 @@ const reduceUrlDatabase = (myUserID) => {
 
 };
 
-
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -92,7 +91,6 @@ app.get("/login", (req, res) => {  //log int part 3
 
   res.render("urls_login", templateVars);
 });
-
 
 app.post("/login", (req, res) => { ///header
   const email = req.body.email;
@@ -125,7 +123,6 @@ app.post("/logout", (req, res) => { ///header
 
   res.redirect("/urls");
 });
-
 
 app.get("/urls", (req, res) => {   ////?? only giving current user id
 
@@ -194,20 +191,13 @@ app.post("/urls/:shortURL", (req, res) => { ///after edit
   res.redirect(`/urls/`);
 });
 
-
 app.post("/urls/:shortURL/delete", (req, res) => {  //delete?  not autho
 
   const shortURL = req.params.shortURL;
-
-  console.log("in delete. db userid vs cookie id",urlDatabase[shortURL].userID,req.cookies.user_id);
-
-  if (urlDatabase[shortURL].userID === req.cookies.user_id) {
-    delete urlDatabase[shortURL];
-    res.redirect(`/urls`);
-  }
-  res.status(403).send("Not authorized");
-  
-}); 
+  delete urlDatabase[shortURL];
+  res.redirect(`/urls`);
+ 
+});
 
 app.get("/u/:shortURL", (req, res) => {
 
@@ -249,12 +239,11 @@ app.post("/register", (req, res) => { //password post
 
 });
 
-
 app.get("/root/:airplane/:train/:boat", (req, res) => {
   // console.log(req.params); //req params is the url. one param is one :/
   //saves as an object {airplane: /url link, train:/url/url, boat...}
   res.send("hello"); //body is in the last location (3 files in)
-})
+});
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
