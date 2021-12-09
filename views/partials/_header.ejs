@@ -22,13 +22,14 @@
       </div>
     </div>
     <% if(user){ %>  
+      <div><p class="card-text"> Logged in as <%= user.email %> &nbsp;</p></div>
       <form method="post" action="/logout">
-      <div><p class="card-text"> Logged in as <%= user.id %> </p></div>
       <button type="submit" class="btn btn-primary">Logout</button>
     </form>
     <% } else{ %>  
     
-    <p> Not signed in</p>
+    <div><p class ="card-text"> Not signed in</p></div>
+
    <% } %>
   </nav>
 </header>

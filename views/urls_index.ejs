@@ -24,16 +24,33 @@
         </tr>
       </thead>
       <tbody>
-        <% for(let url in urls) { %>
+        <% if(!user)  { %>  
+          <p>Maybe you should log in first</p>
+          <% } %>
+
+        <% for(let url in reduced) { %>
           <tr>
             <td><%= url %></td>
-            <td><%= urls[url] %></td>
+            <td><%= urls[url].longURL %></td>
         
-            <td><form method="POST" action="/urls/<%= url %>/delete">
-              <button type="submit" class="btn btn-primary">Delete</button>
-            </form></td>
             <td>
+
+              <% if(urls[url].userID === myAccount)  { %>  
+              <form method="POST" action="/urls/<%= url %>/delete">
+              <button type="submit" class="btn btn-primary">Delete</button>
+              <% } else{ %>  
+              <p> Not Yours </p>
+              <% } %>
+            </form>
+          </td>
+            <td>
+
+              <% if(urls[url].userID === myAccount)  { %>  
               <a href="/urls/<%= url %>" class="btn btn-primary"> EDIT </a>
+              <% } else{ %>  
+                <p> Not Yours </p>
+                <% } %>
+
             </td>
 
           </tr>

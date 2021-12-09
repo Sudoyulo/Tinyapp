@@ -14,8 +14,14 @@ const generateRandomString = () => {
 };
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
+  }
 };
 
 const users = {
@@ -50,7 +56,23 @@ const findUserByEmail = (email) => {
     }
   }
 return false;
-}
+};
+
+const reduceUrlDatabase = (myUserID) => {
+
+  let userDatabse = {};
+
+  for (const accounts in urlDatabase) {
+
+    if (urlDatabase[accounts].userID === myUserID) {
+      userDatabse[accounts] = urlDatabase[accounts];
+    }
+  }
+
+  return userDatabse;
+
+};
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -105,23 +127,26 @@ app.post("/logout", (req, res) => { ///header
 });
 
 
-app.get("/urls", (req, res) => {
+app.get("/urls", (req, res) => {   ////?? only giving current user id
 
   const templateVars = {
+    reduced: reduceUrlDatabase(req.cookies.user_id),
     urls: urlDatabase,
     users: users,
+    myAccount: req.cookies.user_id,
     user: getLoggedInUser(req)
   };
-  // console.log(templateVars);
+  // console.log(urlDatabase);
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new/", (req, res) => {  // the / at the end means something... forgot what
 
   if (!req.cookies.user_id) {
+    
     res.redirect("/urls");
   }
-
+ 
   const templateVars = {
     urls: urlDatabase,
     users: users,
@@ -135,16 +160,18 @@ app.post("/urls", (req, res) => {
 
   // console.log("this is the pair",req.body);  // Log the POST request body to the console
   let randomname = generateRandomString();
-  urlDatabase[randomname] = req.body.longURL;
+  urlDatabase[randomname] = {
+    longURL:  req.body.longURL,
+    userID: req.cookies.user_id
+  };
   res.redirect(`/urls/${randomname}`);         // Respond with 'Ok' (we will replace this)
 
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-
-  //console.log(req.params)
+  
   const shortURL = req.params.shortURL; //keys
-  const longURL = urlDatabase[shortURL]; //values
+  const longURL = urlDatabase[shortURL].longURL; //values
   const templateVars = {
     shortURL,
     longURL,
@@ -152,7 +179,10 @@ app.get("/urls/:shortURL", (req, res) => {
     user: getLoggedInUser(req)
   };
 
-  urlDatabase[req.params.shortURL] = longURL;
+  if (urlDatabase[shortURL].userID !== req.cookies.user_id) {
+    res.status(400).send("Not authorized");
+  }
+  
   // console.log("sadsa",{urlDatabase});
   res.render("urls_show", templateVars);
 
@@ -160,21 +190,28 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL", (req, res) => { ///after edit
 
-  urlDatabase[req.params.shortURL] = req.body.newURL;
+  urlDatabase[req.params.shortURL]["longURL"] = req.body.newURL;
   res.redirect(`/urls/`);
 });
 
 
-app.post("/urls/:shortURL/delete", (req, res) => {  //delete?
+app.post("/urls/:shortURL/delete", (req, res) => {  //delete?  not autho
 
   const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect(`/urls`);
-});
+
+  console.log("in delete. db userid vs cookie id",urlDatabase[shortURL].userID,req.cookies.user_id);
+
+  if (urlDatabase[shortURL].userID === req.cookies.user_id) {
+    delete urlDatabase[shortURL];
+    res.redirect(`/urls`);
+  }
+  res.status(403).send("Not authorized");
+  
+}); 
 
 app.get("/u/:shortURL", (req, res) => {
 
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL][longURL];
   res.redirect(longURL);
 
 });
@@ -204,7 +241,7 @@ app.post("/register", (req, res) => { //password post
     users[id] = {
       id, email, password
     };
-    console.log(users);
+    // console.log(users);
     // console.log(existingUser);
     res.cookie("user_id", id);   ///log in? req.cookies?
     res.redirect("/urls");
@@ -221,6 +258,12 @@ app.get("/root/:airplane/:train/:boat", (req, res) => {
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+app.get("/*", (req, res) => {
+  
+  res.status(404).send("Page does not exist");
+
 });
 
 app.listen(PORT, () => {
