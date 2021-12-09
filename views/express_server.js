@@ -118,6 +118,10 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new/", (req, res) => {  // the / at the end means something... forgot what
 
+  if (!req.cookies.user_id) {
+    res.redirect("/urls");
+  }
+
   const templateVars = {
     urls: urlDatabase,
     users: users,
@@ -194,6 +198,8 @@ app.post("/register", (req, res) => { //password post
 
   if (email === "" || password === "") {
     res.status(400).send("no inputs");
+  } else if (findUserByEmail(email)) {
+    res.status(400).send("already exists");
   } else if (!getLoggedInUser(req)) {
     users[id] = {
       id, email, password
@@ -202,8 +208,6 @@ app.post("/register", (req, res) => { //password post
     // console.log(existingUser);
     res.cookie("user_id", id);   ///log in? req.cookies?
     res.redirect("/urls");
-  } else {
-    res.status(400).send("already exists");
   }
 
 });
