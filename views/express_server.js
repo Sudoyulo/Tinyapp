@@ -151,7 +151,7 @@ app.get("/urls", (req, res) => {   ////?? only giving current user id
 
 app.get("/urls/new", (req, res) => {  // the / at the end means something... forgot what
 
-  if (!req.session.user_id) {
+  if (getLoggedInUser(req) === null) {
     
     res.redirect("/login");
   } else {
