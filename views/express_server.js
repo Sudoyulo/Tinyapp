@@ -6,6 +6,8 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const app = express();
 
+const {findUserByEmail, reduceUrlDatabase, getLoggedInUser } = require("../helpers");
+
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cookieSession({
@@ -43,56 +45,18 @@ const users = {
   }
 };
 
-const getLoggedInUser = (req) => {
-
-  // console.log("req.cookies",req.cookies);
-
-  const user_id = req.session.user_id;
-  
-  if (users[user_id]) {
-    return users[user_id];
-  }
-  return null;
-};
-
-const findUserByEmail = (email, userdb) => {
-  for (const user in userdb) {
-    if (users[user].email === email) {
-      return users[user].id;
-    }
-  }
-return false;
-};
-
-const reduceUrlDatabase = (myUserID) => {
-
-  let userDatabse = {};
-
-  for (const accounts in urlDatabase) {
-
-    if (urlDatabase[accounts].userID === myUserID) {
-      userDatabse[accounts] = urlDatabase[accounts];
-    }
-  }
-
-  return userDatabse;
-
-};
-
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+/* login forms */
 
-app.get("/login", (req, res) => {  //log int part 3
+app.get("/login", (req, res) => {
   
   const templateVars = {
     urls: urlDatabase,
     users: users,
-    user: getLoggedInUser(req)
+    user: getLoggedInUser(req, users)
   };
 
   res.render("urls_login", templateVars);
@@ -112,119 +76,101 @@ app.post("/login", (req, res) => { ///header
   if (!userID) {
     return res.status(403).send("No such user");
   }
-  // bcrypt.compareSync(users[userID].password hashedPassword);
 
-  if (!bcrypt.compareSync(password, hashedPassword)) {
-    
+  if (!bcrypt.compareSync(req.body.password, users[userID].password)) {
     return res.status(403).send("Bad password");
   }
   
-  // console.log(bcrypt.compareSync(password, hashedPassword));
-  if (userID && bcrypt.compareSync(password, hashedPassword)) {
-    
+  if (userID && bcrypt.compareSync(password, users[userID].password)) {
     req.session.user_id = userID;
-
+    res.redirect("/urls");
   }
-
-  res.redirect("/urls");
 });
+
 
 app.post("/logout", (req, res) => {
-
   req.session = null;
-
   res.redirect("/urls");
 });
 
-app.get("/urls", (req, res) => {   ////?? only giving current user id
+app.get("/urls/new", (req, res) => {
 
-  const templateVars = {
-    reduced: reduceUrlDatabase(req.session.user_id),
-    urls: urlDatabase,
-    users: users,
-    myAccount: req.session.user_id,
-    user: getLoggedInUser(req)
-  };
-  // console.log(urlDatabase);
-  res.render("urls_index", templateVars);
-});
-
-app.get("/urls/new", (req, res) => {  // the / at the end means something... forgot what
-
-  if (getLoggedInUser(req) === null) {
-    
+  if (getLoggedInUser(req, users) === null) {
     return res.redirect("/login");
   } else {
     const templateVars = {
       urls: urlDatabase,
       users: users,
-      user: getLoggedInUser(req)
+      user: getLoggedInUser(req , users)
     };
     res.render("urls_new", templateVars);
   }
 });
 
-app.post("/urls", (req, res) => {
+app.get("/urls", (req, res) => {
+  const templateVars = {
+    reduced: reduceUrlDatabase(req.session.user_id, urlDatabase),
+    urls: urlDatabase,
+    users: users,
+    myAccount: req.session.user_id,
+    user: getLoggedInUser(req, users)
+  };
+  res.render("urls_index", templateVars);
+});
 
-  // console.log("this is the pair",req.body);  // Log the POST request body to the console
+app.post("/urls", (req, res) => {
+  // Log the POST request body to the console
   let randomname = generateRandomString();
   urlDatabase[randomname] = {
     longURL:  req.body.longURL,
     userID: req.session.user_id
   };
-  res.redirect(`/urls/${randomname}`);         // Respond with 'Ok' (we will replace this)
-
+  res.redirect(`/urls/${randomname}`);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  
   const shortURL = req.params.shortURL; //keys
   const longURL = urlDatabase[shortURL].longURL; //values
   const templateVars = {
     shortURL,
     longURL,
     users: users,
-    user: getLoggedInUser(req)
+    user: getLoggedInUser(req, users)
   };
 
   if (urlDatabase[shortURL].userID !== req.session.user_id) {
     return res.status(400).send("Not authorized");
   }
   
-  // console.log("sadsa",{urlDatabase});
   res.render("urls_show", templateVars);
-
 });
 
 app.post("/urls/:shortURL", (req, res) => { ///after edit
-
   urlDatabase[req.params.shortURL]["longURL"] = req.body.newURL;
   res.redirect(`/urls/`);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {  //delete?  not autho
-
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect(`/urls`);
- 
 });
 
 app.get("/u/:shortURL", (req, res) => {
-
   const longURL = urlDatabase[req.params.shortURL][longURL];
   res.redirect(longURL);
-
 });
 
-app.get("/register", (req, res) => { //password get
+/*
+* register
+*/
 
+app.get("/register", (req, res) => { //password get
   const templateVars = {
     urls: urlDatabase,
     users: users,
-    user: getLoggedInUser(req)
+    user: getLoggedInUser(req, users)
   };
-
   res.render("urls_register", templateVars);
 });
 
@@ -239,30 +185,29 @@ app.post("/register", (req, res) => { //password post
     return res.status(400).send("no inputs");
   } else if (findUserByEmail(email, users)) {
     return res.status(400).send("already exists");
-  } else if (!getLoggedInUser(req)) {
+  } else if (!getLoggedInUser(req, users)) {
     users[id] = {
       id, email, password: hashedPassword
     };
-    // console.log(users);
-    // console.log(existingUser);
-    //req.session.user_id = id;
-    req.session.user_id = id;   ///log in? req.cookies?
+    req.session.user_id = id;
     res.redirect("/urls");
   }
 
 });
 
-app.get("/root/:airplane/:train/:boat", (req, res) => {
-  // console.log(req.params); //req params is the url. one param is one :/
-  //saves as an object {airplane: /url link, train:/url/url, boat...}
-  res.send("hello"); //body is in the last location (3 files in)
+/*
+* all other urls
+*/
+
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
 });
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
-app.get("/*", (req, res) => {
+app.get("/*", (req, res) => {  //catch all for all other urls
   res.status(404).send("Page does not exist");
 });
 
