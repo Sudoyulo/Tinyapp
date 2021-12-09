@@ -55,8 +55,8 @@ const getLoggedInUser = (req) => {
   return null;
 };
 
-const findUserByEmail = (email) => {
-  for (const user in users) {
+const findUserByEmail = (email, userdb) => {
+  for (const user in userdb) {
     if (users[user].email === email) {
       return users[user].id;
     }
@@ -104,19 +104,19 @@ app.post("/login", (req, res) => { ///header
   const hashedPassword = bcrypt.hashSync(password, 10);
   
   if (email === "" || password === "") {
-    res.status(400).send("no inputs");
+    return res.status(400).send("no inputs");
   }
   
-  const userID = findUserByEmail(email);
+  const userID = findUserByEmail(email, users);
   
   if (!userID) {
-    res.status(403).send("No such user");
+    return res.status(403).send("No such user");
   }
   // bcrypt.compareSync(users[userID].password hashedPassword);
 
   if (!bcrypt.compareSync(password, hashedPassword)) {
     
-    res.status(403).send("Bad password");
+    return res.status(403).send("Bad password");
   }
   
   // console.log(bcrypt.compareSync(password, hashedPassword));
@@ -153,7 +153,7 @@ app.get("/urls/new", (req, res) => {  // the / at the end means something... for
 
   if (getLoggedInUser(req) === null) {
     
-    res.redirect("/login");
+    return res.redirect("/login");
   } else {
     const templateVars = {
       urls: urlDatabase,
@@ -188,7 +188,7 @@ app.get("/urls/:shortURL", (req, res) => {
   };
 
   if (urlDatabase[shortURL].userID !== req.session.user_id) {
-    res.status(400).send("Not authorized");
+    return res.status(400).send("Not authorized");
   }
   
   // console.log("sadsa",{urlDatabase});
@@ -236,9 +236,9 @@ app.post("/register", (req, res) => { //password post
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (email === "" || password === "") {
-    res.status(400).send("no inputs");
-  } else if (findUserByEmail(email)) {
-    res.status(400).send("already exists");
+    return res.status(400).send("no inputs");
+  } else if (findUserByEmail(email, users)) {
+    return res.status(400).send("already exists");
   } else if (!getLoggedInUser(req)) {
     users[id] = {
       id, email, password: hashedPassword
@@ -263,9 +263,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/*", (req, res) => {
-  
   res.status(404).send("Page does not exist");
-
 });
 
 app.listen(PORT, () => {
