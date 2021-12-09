@@ -114,21 +114,22 @@ app.post("/login", (req, res) => { ///header
   }
   // bcrypt.compareSync(users[userID].password hashedPassword);
 
-  if (bcrypt.compareSync(users[userID].password, hashedPassword)) {
+  if (!bcrypt.compareSync(password, hashedPassword)) {
     
     res.status(403).send("Bad password");
   }
-
-  if (userID && bcrypt.compareSync(users[userID].password, hashedPassword)) { //wont login
+  
+  // console.log(bcrypt.compareSync(password, hashedPassword));
+  if (userID && bcrypt.compareSync(password, hashedPassword)) {
     
-    req.session.user_id = findUserByEmail(email);
+    req.session.user_id = userID;
 
   }
 
   res.redirect("/urls");
 });
 
-app.post("/logout", (req, res) => { ///header
+app.post("/logout", (req, res) => {
 
   req.session = null;
 
