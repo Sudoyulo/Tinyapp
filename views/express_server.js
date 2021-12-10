@@ -1,15 +1,13 @@
 const { response } = require("express");
 const express = require("express");
+const cookieSession = require('cookie-session');
+const {findUserByEmail, reduceUrlDatabase, getLoggedInUser } = require("../helpers");
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const app = express();
 
-const {findUserByEmail, reduceUrlDatabase, getLoggedInUser } = require("../helpers");
-
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(cookieSession({
   name: 'session',
   keys: ["user_id"],
@@ -24,11 +22,17 @@ const generateRandomString = () => {
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
-    userID: "aJ48lW"
+    userID: "aJ48lW",
+    viewCount: 0,
+    viewedBy: [],
+    date: new Date()
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
-    userID: "aJ48lW"
+    userID: "aJ48lW",
+    viewCount: 0,
+    viewedBy: [],
+    date: new Date()
   }
 };
 
@@ -65,11 +69,6 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => { ///header
   const email = req.body.email;
   const password = req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  
-  if (email === "" || password === "") {
-    return res.status(400).send("no inputs");
-  }
   
   const userID = findUserByEmail(email, users);
   
@@ -87,11 +86,14 @@ app.post("/login", (req, res) => { ///header
   }
 });
 
-
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
 });
+
+/*
+* URLs main
+*/
 
 app.get("/urls/new", (req, res) => {
 
@@ -123,7 +125,10 @@ app.post("/urls", (req, res) => {
   let randomname = generateRandomString();
   urlDatabase[randomname] = {
     longURL:  req.body.longURL,
-    userID: req.session.user_id
+    userID: req.session.user_id,
+    viewCount: 0,
+    viewedBy: [],
+    date: new Date()
   };
   res.redirect(`/urls/${randomname}`);
 });
@@ -131,17 +136,24 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL; //keys
   const longURL = urlDatabase[shortURL].longURL; //values
+  urlDatabase[shortURL].viewCount++;
+  urlDatabase[shortURL].date = new Date();
+
+  if (!urlDatabase[shortURL].viewedBy.includes(req.session.user_id)) {
+    urlDatabase[shortURL].viewedBy.push(req.session.user_id);
+  }
+
   const templateVars = {
     shortURL,
     longURL,
     users: users,
-    user: getLoggedInUser(req, users)
+    viewedBy: urlDatabase[shortURL].viewedBy,
+    date: urlDatabase[shortURL].date,
+    user: getLoggedInUser(req, users),
+    sessionID: req.session.user_id,
+    myAccount: urlDatabase[shortURL].userID
   };
 
-  if (urlDatabase[shortURL].userID !== req.session.user_id) {
-    return res.status(400).send("Not authorized");
-  }
-  
   res.render("urls_show", templateVars);
 });
 
@@ -150,7 +162,7 @@ app.post("/urls/:shortURL", (req, res) => { ///after edit
   res.redirect(`/urls/`);
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {  //delete?  not autho
+app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect(`/urls`);

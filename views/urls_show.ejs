@@ -12,8 +12,9 @@
       <div class="card-header"></div>
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+        <p class="card-text">Short URL: <a href="<%= longURL %>"><%= shortURL %></a></p>
       </div>
+      <% if (sessionID === myAccount)  { %>  
 
       <div class="card-footer text-muted">
         <h3>Edit this URL</h3>
@@ -23,6 +24,7 @@
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>
       </div>
+      <% } %>
   </div>
 
 

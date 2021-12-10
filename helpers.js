@@ -4,7 +4,7 @@ const findUserByEmail = (email, userdb) => { //returns userid from email
       return userdb[user].id;
     }
   }
-  return false;
+  return undefined;
 };
 
 const reduceUrlDatabase = (myUserID, urlDB) => { // removes urls not made by user
@@ -24,10 +24,10 @@ const reduceUrlDatabase = (myUserID, urlDB) => { // removes urls not made by use
 
 const getLoggedInUser = (req, users) => { //returns id of user logged in
 
-  const user_id = req.session.user_id;
+  const id = req.session.user_id;
   
-  if (users[user_id]) {
-    return users[user_id];
+  if (users[id]) {
+    return users[id];
   }
   return null;
 };
