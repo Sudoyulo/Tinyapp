@@ -21,10 +21,16 @@
           <form method="post" action="/urls/<%= shortURL %>">
           <label for="newURL">Enter New URL:</label>
           <input type="text" name="newURL" placeholder="http://" style="width: 300px; margin: 1em">
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="submit" class="btn btn-primary">Update</button>
         </form>
       </div>
-      <% } %>
+          <td><p> Date Created: <%= urls[shortURL].date %></p></td>
+          <td><p> View Count: <%= urls[shortURL].viewCount %> &nbsp;&nbsp;&nbsp;
+             Unique Views: <%= urls[shortURL].viewedBy.length %></p></td>
+         
+             <% } else{ %>  
+              <p> Not Yours </p>
+            <% } %>
   </div>
 
 

@@ -62,25 +62,24 @@ app.get("/login", (req, res) => {
     users: users,
     user: getLoggedInUser(req, users)
   };
-
   res.render("urls_login", templateVars);
 });
 
 app.post("/login", (req, res) => { ///header
   const email = req.body.email;
   const password = req.body.password;
-  
   const userID = findUserByEmail(email, users);
-  
+  const goodPassword = bcrypt.compareSync(password, users[userID]["password"]);
+
   if (!userID) {
-    return res.status(403).send("No such user");
+    return res.status(400).send("No such user");
   }
 
-  if (!bcrypt.compareSync(req.body.password, users[userID].password)) {
+  if (!goodPassword) {
     return res.status(403).send("Bad password");
   }
   
-  if (userID && bcrypt.compareSync(password, users[userID].password)) {
+  if (userID && goodPassword) {
     req.session.user_id = userID;
     res.redirect("/urls");
   }
@@ -112,10 +111,10 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = {
     reduced: reduceUrlDatabase(req.session.user_id, urlDatabase),
+    user: getLoggedInUser(req, users),
     urls: urlDatabase,
     users: users,
     myAccount: req.session.user_id,
-    user: getLoggedInUser(req, users)
   };
   res.render("urls_index", templateVars);
 });
@@ -136,48 +135,50 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL; //keys
   const longURL = urlDatabase[shortURL].longURL; //values
+  const uniqueViewer = urlDatabase[shortURL].viewedBy.includes(req.session.user_id);
   urlDatabase[shortURL].viewCount++;
-  urlDatabase[shortURL].date = new Date();
 
-  if (!urlDatabase[shortURL].viewedBy.includes(req.session.user_id)) {
+  if (!uniqueViewer) {
     urlDatabase[shortURL].viewedBy.push(req.session.user_id);
   }
 
   const templateVars = {
+    user: getLoggedInUser(req, users),
     shortURL,
     longURL,
+    urls: urlDatabase,
     users: users,
     viewedBy: urlDatabase[shortURL].viewedBy,
     date: urlDatabase[shortURL].date,
-    user: getLoggedInUser(req, users),
     sessionID: req.session.user_id,
     myAccount: urlDatabase[shortURL].userID
   };
-
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls/:shortURL", (req, res) => { ///after edit
   urlDatabase[req.params.shortURL]["longURL"] = req.body.newURL;
-  res.redirect(`/urls/`);
+  res.redirect(`/urls`);
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.post("/urls/:shortURL/delete", (req, res) => { //if not user then cant delete****
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect(`/urls`);
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL][longURL];
-  res.redirect(longURL);
+  if (urlDatabase[req.params.shortURL]["longURL"]) {
+    return res.redirect(urlDatabase[req.params.shortURL]["longURL"]);
+  }
+  res.status(404).send("Page Not Found");
 });
 
 /*
 * register
 */
 
-app.get("/register", (req, res) => { //password get
+app.get("/register", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
     users: users,
@@ -186,8 +187,7 @@ app.get("/register", (req, res) => { //password get
   res.render("urls_register", templateVars);
 });
 
-app.post("/register", (req, res) => { //password post
-
+app.post("/register", (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
@@ -195,7 +195,7 @@ app.post("/register", (req, res) => { //password post
 
   if (email === "" || password === "") {
     return res.status(400).send("no inputs");
-  } else if (findUserByEmail(email, users)) {
+  } else if (findUserByEmail(email, users)) { //email exists in user database
     return res.status(400).send("already exists");
   } else if (!getLoggedInUser(req, users)) {
     users[id] = {

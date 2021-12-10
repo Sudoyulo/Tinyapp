@@ -27,44 +27,38 @@
         </tr>
       </thead>
       <tbody>
-        <% if(!user)  { %>  
-          <p>Maybe you should log in first</p>
-          <% } %>
-
         <% for(let url in reduced) { %>
-          <tr>
-            <td><a href=/urls/<%= url%> ><%= url %></a></td>
-            <td><%= urls[url].longURL %></td>
-            <td><%= urls[url].date %></td>
-            <td><%= urls[url].viewCount %></td>
-            <td><%= urls[url].viewedBy.length %></td> 
-            <td>
-              <% if(urls[url].userID === myAccount)  { %>  
-              <form method="POST" action="/urls/<%= url %>/delete">
-              <button type="submit" class="btn btn-primary">Delete</button>
-              <% } else{ %>  
-              <p> Not Yours </p>
-              <% } %>
-            </form>
-          </td>
-            <td>
-
-              <% if(urls[url].userID === myAccount)  { %>  
-              <a href="/urls/<%= url %>" class="btn btn-primary"> Edit </a>
-              <% } else{ %>  
-                <p> Not Yours </p>
-                <% } %>
-
-            </td>
-
-          </tr>
+        <tr>
+          <td><a href=/urls/<%= url%> ><%= url %></a></td>
+          <td><%= urls[url].longURL %></td>
+          <td><%= urls[url].date %></td>
+          <td><%= urls[url].viewCount %></td>
+          <td><%= urls[url].viewedBy.length %></td> 
+          <td>
+          <% if(urls[url].userID === myAccount)  { %>  
+          <form method="POST" action="/urls/<%= url %>/delete">
+          <button type="submit" class="btn btn-primary">Delete</button>
+          <% } else{ %>  
+            <p> Not Yours </p>
           <% } %>
+          </form>
+          </td>
+          <td>
+            <% if(urls[url].userID === myAccount)  { %>  
+            <a href="/urls/<%= url %>" class="btn btn-primary"> Edit </a>
+            <% } else{ %>  
+              <p> Not Yours </p>
+            <% } %>
+          </td>
+          </tr>
+        <% } %>
       </tbody>
     </table>
+    <% if(!user)  { %>  
+      <p>Error: Maybe you should log in first</p>
+    <% } %>
   </main>
 
-
-  
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
