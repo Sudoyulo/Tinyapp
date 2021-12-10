@@ -66,20 +66,23 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => { ///header
+ 
+  if (req.body.email === "" || req.body.password === "") {
+    return res.status(400).send("No input detected");
+  }
+
   const email = req.body.email;
-  const password = req.body.password;
   const userID = findUserByEmail(email, users);
-  const goodPassword = bcrypt.compareSync(password, users[userID]["password"]);
 
   if (!userID) {
     return res.status(400).send("No such user");
   }
 
-  if (!goodPassword) {
+  if (!bcrypt.compareSync(req.body.password, users[userID]["password"])) {
     return res.status(403).send("Bad password");
   }
   
-  if (userID && goodPassword) {
+  if (userID && bcrypt.compareSync(req.body.password, users[userID]["password"])) {
     req.session.user_id = userID;
     res.redirect("/urls");
   }
