@@ -15,7 +15,6 @@
         <p class="card-text">Short URL: <a href="<%= longURL %>"><%= shortURL %></a></p>
       </div>
       <% if (sessionID === myAccount)  { %>  
-
       <div class="card-footer text-muted">
         <h3>Edit this URL</h3>
           <form method="post" action="/urls/<%= shortURL %>">
@@ -27,13 +26,10 @@
           <td><p> Date Created: <%= urls[shortURL].date %></p></td>
           <td><p> View Count: <%= urls[shortURL].viewCount %> &nbsp;&nbsp;&nbsp;
              Unique Views: <%= urls[shortURL].viewedBy.length %></p></td>
-         
              <% } else{ %>  
-              <p> Not Yours </p>
+              <p> This is not Your url </p>
             <% } %>
   </div>
-
-
   </div>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

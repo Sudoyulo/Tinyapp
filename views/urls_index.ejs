@@ -35,13 +35,13 @@
           <td><%= urls[url].viewCount %></td>
           <td><%= urls[url].viewedBy.length %></td> 
           <td>
-          <% if(urls[url].userID === myAccount)  { %>  
-          <form method="POST" action="/urls/<%= url %>/delete">
-          <button type="submit" class="btn btn-primary">Delete</button>
-          <% } else{ %>  
-            <p> Not Yours </p>
-          <% } %>
-          </form>
+            <% if(urls[url].userID === myAccount)  { %>  
+              <form method="POST" action="/urls/<%= url %>/delete">
+              <button type="submit" class="btn btn-primary">Delete</button>
+            <% } else{ %>  
+              <p> Not Yours </p>
+            <% } %>
+            </form>
           </td>
           <td>
             <% if(urls[url].userID === myAccount)  { %>  

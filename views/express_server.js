@@ -2,7 +2,7 @@ const { response } = require("express");
 const express = require("express");
 const cookieSession = require('cookie-session');
 const {findUserByEmail, reduceUrlDatabase, getLoggedInUser } = require("../helpers");
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
 const app = express();
@@ -15,7 +15,7 @@ app.use(cookieSession({
 
 app.set("view engine", "ejs");
 
-const generateRandomString = () => {
+const generateRandomString = () => { //generate a unique 6 character string
   return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
 };
 
@@ -105,7 +105,7 @@ app.get("/urls/new", (req, res) => {
     const templateVars = {
       urls: urlDatabase,
       users: users,
-      user: getLoggedInUser(req , users)
+      user: getLoggedInUser(req, users)
     };
     res.render("urls_new", templateVars);
   }
@@ -126,7 +126,7 @@ app.post("/urls", (req, res) => {
   // Log the POST request body to the console
   let randomname = generateRandomString();
   urlDatabase[randomname] = {
-    longURL:  req.body.longURL,
+    longURL: req.body.longURL,
     userID: req.session.user_id,
     viewCount: 0,
     viewedBy: [],
