@@ -1,7 +1,7 @@
 const { response } = require("express");
 const express = require("express");
 const cookieSession = require('cookie-session');
-const {findUserByEmail, reduceUrlDatabase, getLoggedInUser } = require("../helpers");
+const {findUserByEmail, reduceUrlDatabase, getLoggedInUser } = require("./helpers");
 const PORT = 8080;
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
