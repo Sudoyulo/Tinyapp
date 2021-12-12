@@ -165,13 +165,12 @@ app.post("/urls/:shortURL", (req, res) => { ///after edit
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => { //if not user then cant delete****
-  if (getLoggedInUser(req, users) === null) {
-    return res.redirect("/login");
-  } else {
+  if (getLoggedInUser(req, users) === urlDatabase[req.params.shortURL].userID) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
     res.redirect(`/urls`);
   }
+  return res.status(400).send("You do not have permissions to delete");
 });
 
 app.get("/u/:shortURL", (req, res) => {
