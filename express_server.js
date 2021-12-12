@@ -124,7 +124,7 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   // Log the POST request body to the console
-  let randomname = generateRandomString();
+  const randomname = generateRandomString();
   urlDatabase[randomname] = {
     longURL: req.body.longURL,
     userID: req.session.user_id,
@@ -159,12 +159,12 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.post("/urls/:shortURL", (req, res) => { ///after edit
+app.post("/urls/:shortURL", (req, res) => {
   urlDatabase[req.params.shortURL]["longURL"] = req.body.newURL;
   res.redirect(`/urls`);
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => { //if not user then cant delete****
+app.post("/urls/:shortURL/delete", (req, res) => {
   if (getLoggedInUser(req, users) === urlDatabase[req.params.shortURL].userID) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
@@ -177,7 +177,7 @@ app.get("/u/:shortURL", (req, res) => {
   if (urlDatabase[req.params.shortURL]["longURL"]) {
     return res.redirect(urlDatabase[req.params.shortURL]["longURL"]);
   }
-  res.status(404).send("Page Not Found");
+  res.status(404).send("Page Not Found. Go to '/urls' to view a navigatable webpage");
 });
 
 /*
