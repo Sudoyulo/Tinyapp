@@ -50,7 +50,11 @@ const users = {
 };
 
 app.get("/", (req, res) => { //send back to urls
-  res.redirect("/urls");
+
+  if (getLoggedInUser(req, users)) {
+    return res.redirect("/urls");
+  }
+  res.redirect("/login");
 });
 
 /* login forms */
@@ -168,7 +172,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   if (getLoggedInUser(req, users) === urlDatabase[req.params.shortURL].userID) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
-    res.redirect(`/urls`);
+    return res.redirect(`/urls`);
   }
   return res.status(400).send("You do not have permissions to delete");
 });
