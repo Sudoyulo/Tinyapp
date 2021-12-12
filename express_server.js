@@ -49,8 +49,8 @@ const users = {
   }
 };
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
+app.get("/", (req, res) => { //send back to urls
+  res.redirect("/urls");
 });
 
 /* login forms */
@@ -165,9 +165,13 @@ app.post("/urls/:shortURL", (req, res) => { ///after edit
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => { //if not user then cant delete****
-  const shortURL = req.params.shortURL;
-  delete urlDatabase[shortURL];
-  res.redirect(`/urls`);
+  if (getLoggedInUser(req, users) === null) {
+    return res.redirect("/login");
+  } else {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect(`/urls`);
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
